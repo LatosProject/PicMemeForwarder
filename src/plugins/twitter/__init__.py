@@ -34,8 +34,9 @@ sub_plugins = nonebot.load_plugins(
 
 # 图片缓存
 _image_cache: list[str] = []
+_sent_images: set[str] = set()  # 已发送的图片
 _cache_last_refresh: datetime | None = None
-CACHE_REFRESH_INTERVAL = 3600  # 缓存刷新间隔（秒）
+CACHE_REFRESH_INTERVAL = 3600  
 
 memepic = on_command("meme")
 
@@ -71,9 +72,8 @@ def refresh_cache():
 
 def get_cached_image() -> str | None:
     """从缓存获取随机图片，必要时刷新缓存"""
-    global _image_cache, _cache_last_refresh
+    global _image_cache, _cache_last_refresh, _sent_images
 
-    # 检查是否需要刷新缓存
     need_refresh = (
         not _image_cache or
         _cache_last_refresh is None or
@@ -86,7 +86,15 @@ def get_cached_image() -> str | None:
     if not _image_cache:
         return None
 
-    return random.choice(_image_cache)
+    available = [img for img in _image_cache if img not in _sent_images]
+
+    if not available:
+        _sent_images.clear()
+        available = _image_cache
+
+    img = random.choice(available)
+    _sent_images.add(img)
+    return img
 
 
 @memepic.handle()
@@ -127,7 +135,6 @@ async def scheduled_meme():
         await bot.send_group_msg(group_id=group_id, message=msg)
 
 
-# 定时刷新缓存（每小时）
 @scheduler.scheduled_job("cron", minute="0", id="cache_refresh_job")
 async def scheduled_cache_refresh():
     refresh_cache()
