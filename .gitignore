@@ -1,0 +1,23 @@
+# Byte-compiled
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# Environment
+.env
+.env.prod
+.env.dev
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Data
+data/
+
+.history/
+
+.claude/
